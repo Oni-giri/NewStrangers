@@ -35,11 +35,3 @@ Now that you have the snapshot, you can run the script to deploy the contract :
 
 You'll need to add some logic to the `airdrop.py` script to actually send the tokens to the addresses you want to airdrop to. You can use the `mint` function of the contract to do that in a gas-efficient way.
 
-```bash
-
-```
-
-```bash
-
-```
-
