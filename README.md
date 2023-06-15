@@ -22,7 +22,7 @@ brownie run scripts/snapshot.py
 
 This will create two JSON files : `IdToOwner.json`and `OwnerToId.json`.
 
-To deploy the contracts, you'll need to add your private key to the brownie config file. You can do this by running `brownie accounts new [account name]` and entering your private key when prompted.
+To deploy the contracts, you'll need to add your private key to the brownie config file. You can do this by running `brownie accounts new myWallet` and entering your private key when prompted.
 
 You can then add your etherscan API key using `export ETHERSCAN_TOKEN=[key]`
 

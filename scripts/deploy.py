@@ -1,5 +1,5 @@
 from brownie import *
-from brownie import NewStrangers
+from brownie import NewStrangers, accounts
 
 
 def main():
@@ -9,7 +9,7 @@ def main():
     name = "testSFT"
     symbol = "tstf"
 
-    deployer = accounts[0]
+    deployer = accounts.load("MyWallet")
     sft = NewStrangers.deploy(uri, name, symbol, {'from': deployer}, publish_source=True)
 
     # mint(_to, _tokenId, _amount, _data)
@@ -23,5 +23,5 @@ def main():
 
     with(open("sft_address.txt", "w")) as f:
         f.write(sft.address)
-        
+
 
