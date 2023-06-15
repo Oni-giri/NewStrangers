@@ -6,8 +6,9 @@ pragma solidity ^0.8.0;
 import "../openzeppelin-contracts/contracts/token/ERC1155/ERC1155.sol";
 import "../openzeppelin-contracts/contracts/token/ERC1155/extensions/ERC1155Burnable.sol";
 import "../openzeppelin-contracts/contracts/token/ERC1155/extensions/ERC1155Pausable.sol";
-import "../openzeppelin-contracts/contracts/access/AccessControlEnumerable.sol";
+import "../openzeppelin-contracts/contracts/access/Ownable.sol";
 import "../openzeppelin-contracts/contracts/utils/Context.sol";
+import "../openzeppelin-contracts/contracts/utils/Strings.sol";
 
 /**
  * @dev {ERC1155} token, including:
@@ -25,19 +26,21 @@ import "../openzeppelin-contracts/contracts/utils/Context.sol";
  *
  * _Deprecated in favor of https://wizard.openzeppelin.com/[Contracts Wizard]._
  */
-contract NewStrangers is Context, AccessControlEnumerable, ERC1155Burnable, ERC1155Pausable {
-    bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
-    bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
+contract NewStrangers is Context, Ownable, ERC1155Burnable, ERC1155Pausable {
+    // Contract name
+    string public name;
+    // Contract symbol
+    string public symbol;
+    // Token supply
+    mapping(uint256 => uint256) public totalSupply;
 
-    /**
-     * @dev Grants `DEFAULT_ADMIN_ROLE`, `MINTER_ROLE`, and `PAUSER_ROLE` to the account that
-     * deploys the contract.
-     */
-    constructor(string memory uri) ERC1155(uri) {
-        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-
-        _setupRole(MINTER_ROLE, _msgSender());
-        _setupRole(PAUSER_ROLE, _msgSender());
+    constructor(
+        string memory _uri,
+        string memory _name,
+        string memory _symbol
+    ) ERC1155(_uri) {
+        name = _name;
+        symbol = _symbol;
     }
 
     /**
@@ -54,10 +57,9 @@ contract NewStrangers is Context, AccessControlEnumerable, ERC1155Burnable, ERC1
         uint256 id,
         uint256 amount,
         bytes memory data
-    ) public virtual {
-        require(hasRole(MINTER_ROLE, _msgSender()), "ERC1155PresetMinterPauser: must have minter role to mint");
-
+    ) public virtual onlyOwner {
         _mint(to, id, amount, data);
+        totalSupply[id] += amount;
     }
 
     /**
@@ -68,9 +70,7 @@ contract NewStrangers is Context, AccessControlEnumerable, ERC1155Burnable, ERC1
         uint256[] memory ids,
         uint256[] memory amounts,
         bytes memory data
-    ) public virtual {
-        require(hasRole(MINTER_ROLE, _msgSender()), "ERC1155PresetMinterPauser: must have minter role to mint");
-
+    ) public virtual onlyOwner {
         _mintBatch(to, ids, amounts, data);
     }
 
@@ -83,8 +83,7 @@ contract NewStrangers is Context, AccessControlEnumerable, ERC1155Burnable, ERC1
      *
      * - the caller must have the `PAUSER_ROLE`.
      */
-    function pause() public virtual {
-        require(hasRole(PAUSER_ROLE, _msgSender()), "ERC1155PresetMinterPauser: must have pauser role to pause");
+    function pause() public virtual onlyOwner {
         _pause();
     }
 
@@ -97,21 +96,16 @@ contract NewStrangers is Context, AccessControlEnumerable, ERC1155Burnable, ERC1
      *
      * - the caller must have the `PAUSER_ROLE`.
      */
-    function unpause() public virtual {
-        require(hasRole(PAUSER_ROLE, _msgSender()), "ERC1155PresetMinterPauser: must have pauser role to unpause");
+    function unpause() public virtual onlyOwner {
         _unpause();
     }
 
     /**
      * @dev See {IERC165-supportsInterface}.
      */
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        virtual
-        override(AccessControlEnumerable, ERC1155)
-        returns (bool)
-    {
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view virtual override(ERC1155) returns (bool) {
         return super.supportsInterface(interfaceId);
     }
 
@@ -124,5 +118,12 @@ contract NewStrangers is Context, AccessControlEnumerable, ERC1155Burnable, ERC1
         bytes memory data
     ) internal virtual override(ERC1155, ERC1155Pausable) {
         super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
+    }
+
+    function uri(uint256 _id) public view override returns (string memory) {
+        return
+            string(
+                abi.encodePacked(super.uri(_id), Strings.toString(_id), ".json")
+            );
     }
 }
